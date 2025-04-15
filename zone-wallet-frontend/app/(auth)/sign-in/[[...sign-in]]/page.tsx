@@ -23,7 +23,7 @@ export default function Page() {
         </div>
       </div>
       <div className="h-full bg-white-600 hidden lg:flex items-center justify-center">
-        <Image src="/Sign-in-picture.webp" height={1440} width={1200} alt='Sign In Image'/>
+        <Image src="logo.svg" height={100} width={100} alt='Sign In Image'/>
       </div>
     </div>
   );
