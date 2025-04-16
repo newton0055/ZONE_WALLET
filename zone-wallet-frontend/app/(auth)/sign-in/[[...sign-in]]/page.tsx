@@ -22,8 +22,8 @@ export default function Page() {
           </ClerkLoading>
         </div>
       </div>
-      <div className="h-full bg-white-600 hidden lg:flex items-center justify-center">
-        <Image src="logo.svg" height={100} width={100} alt='Sign In Image'/>
+      <div className="h-full bg-purple-600 hidden lg:flex items-center justify-center">
+        <Image src="logo.svg" height={200} width={200} alt='Logo'/>
       </div>
     </div>
   );

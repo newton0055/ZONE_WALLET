@@ -23,7 +23,7 @@ export default function Page() {
         </div>
       </div>
       <div className="h-full bg-purple-600 hidden lg:flex items-center justify-center">
-        <Image src="/logo.svg" height={100} width={100} alt='Sign In Image'/>
+        <Image src="/logo.svg" height={100} width={100} alt='Logo'/>
       </div>
     </div>
   );
