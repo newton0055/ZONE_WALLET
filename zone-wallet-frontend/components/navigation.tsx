@@ -24,7 +24,7 @@ const routes = [
   },
   {
     href: "/accounts",
-    label: "Accounts",
+    label: "Wallets",
   },
   {
     href: "/settings",
