@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
 import { columns } from "./columns";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
-import { useBulkDeleteAccount } from "@/features/accounts/api/use-bulk-delete";
+import { useBulkDeleteAccount } from "@/features/accounts/api/use-bulk-delete-accounts";
 
 const WalletsPage = () => {
   const newWallet = useNewAccount();
