@@ -15,6 +15,13 @@
       "when": 1744749670873,
       "tag": "0001_complex_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747995292833,
+      "tag": "0002_rainy_praxagora",
+      "breakpoints": true
     }
   ]
 }
