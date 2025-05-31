@@ -19,10 +19,6 @@ const routes = [
     label: "Transactions",
   },
   {
-    href: "/buy&sell",
-    label: "Buy&Sell",
-  },
-  {
     href: "/accounts",
     label: "Wallets",
   },
