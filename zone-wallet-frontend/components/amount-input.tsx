@@ -13,14 +13,14 @@ type Props = {
   value: string;
   onChange: (value: string | undefined) => void;
   placeholder?: string;
-  disabaled?: boolean;
+  disabled?: boolean;
 };
 
 export const AmountInput = ({
   value,
   onChange,
   placeholder,
-  disabaled,
+  disabled,
 }: Props) => {
   const parsedValue = parseFloat(value);
   const isCredit = parsedValue > 0;
@@ -64,7 +64,7 @@ export const AmountInput = ({
         decimalsLimit={2}
         decimalScale={2}
         onValueChange={onChange}
-        disabled={disabaled}
+        disabled={disabled}
       />
       <p className="text-xs text-muted-foreground mt-2">
         {isCredit && "This will count as credit"}
