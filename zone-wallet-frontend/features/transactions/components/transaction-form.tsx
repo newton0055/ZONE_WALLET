@@ -1,13 +1,11 @@
-import { z } from "zod";
 import { Trash } from "lucide-react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { insertTransactionSchema } from "@/db/schema";
+// components
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/date-picker";
-import { AmountInput } from "@/components/amount-input";
-import { insertTransactionSchema } from "@/db/schema";
 import {
   Form,
   FormControl,
@@ -16,32 +14,34 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Select } from "@/components/select";
 import { Textarea } from "@/components/ui/textarea";
-import { convertAmountToMiliunits } from "@/lib/utils";
+import { Select } from "@/components/select";
+import { DatePicker } from "@/components/date-picker";
+import { AmountInput } from "@/components/amount-input";
+import {
+  convertAmountFromMiliunits,
+  convertAmountToMiliunits,
+} from "@/lib/utils";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   date: z.coerce.date(),
-  accountId: z.string(),
-  payee: z.string(),
   amount: z.string(),
+  accountId: z.string(),
   notes: z.string().nullable().optional(),
+  payee: z.string(),
 });
+export const apiSchema = insertTransactionSchema.omit({ id: true });
 
-const apiSchema = insertTransactionSchema.omit({
-  id: true,
-});
-
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+export type FormValues = z.infer<typeof formSchema>;
+export type ApiValues = z.infer<typeof apiSchema>;
 
 type Props = {
   id?: string;
   defaultValues?: FormValues;
-  onSubmit: (values: ApiFormValues) => void;
+  onSubmit: (values: ApiValues) => void;
   onDelete?: () => void;
   disabled?: boolean;
-  accountOptions: { label: string; value: string }[];
+  accountOptions?: { label: string; value: string }[];
   onCreateAccount: (name: string) => void;
 };
 
@@ -56,23 +56,21 @@ export const TransactionForm = ({
 }: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues,
+    defaultValues,
   });
 
-  const handleSubmit = (values: FormValues) => {
-    const amount = parseFloat(values.amount);
-    const amountInMiliunits = convertAmountToMiliunits(amount);
-
+  const handleSubmit = (formValues: FormValues) => {
+    const amount = parseFloat(formValues.amount);
+    const miliunits = convertAmountToMiliunits(amount);
     onSubmit({
-      ...values,
-      amount: amountInMiliunits,
+      ...formValues,
+      amount: miliunits,
     });
   };
 
   const handleDelete = () => {
     onDelete?.();
   };
-
   return (
     <Form {...form}>
       <form
@@ -80,8 +78,8 @@ export const TransactionForm = ({
         className="space-y-4 pt-4"
       >
         <FormField
-          name="date"
           control={form.control}
+          name="date"
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -91,91 +89,96 @@ export const TransactionForm = ({
                   disabled={disabled}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
-          name="accountId"
           control={form.control}
+          name="accountId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
                 <Select
-                  placeholder="Select an account"
-                  options={accountOptions}
+                  onChange={field.onChange}
                   onCreate={onCreateAccount}
                   value={field.value}
-                  onChange={field.onChange}
+                  options={accountOptions}
+                  placeholder="Select an account"
                   disabled={disabled}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
-          name="payee"
           control={form.control}
+          name="payee"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Payee</FormLabel>
               <FormControl>
                 <Input
                   disabled={disabled}
-                  placeholder="Add a payee"
                   {...field}
+                  placeholder="Add a payee"
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
-          name="amount"
           control={form.control}
+          name="amount"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
                 <AmountInput
-                  {...field}
                   disabled={disabled}
+                  {...field}
                   placeholder="0.00"
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
-          name="notes"
           control={form.control}
+          name="notes"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
                 <Textarea
+                  disabled={disabled}
                   {...field}
                   value={field.value ?? ""}
-                  disabled={disabled}
                   placeholder="Optional notes"
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button className="w-full" disabled={disabled}>
-          {id ? "Save changes" : "Create transaction"}
+        <Button type="submit" disabled={disabled} className="w-full">
+          {id ? "Save Changes" : "Create Transaction"}
         </Button>
         {!!id && (
           <Button
+            variant="destructive"
             type="button"
-            disabled={disabled}
             onClick={handleDelete}
+            disabled={disabled}
             className="w-full"
-            variant="outline"
           >
-            <Trash className="size-4 mr-2" />
-            Delete transaction
+            <Trash className="mr-2 size-4" />
+            Delete
           </Button>
         )}
       </form>
