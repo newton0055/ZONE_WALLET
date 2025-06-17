@@ -3,6 +3,10 @@ import { subDays, parse, differenceInDays } from "date-fns";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { db } from "@/db/drizzle";
+import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { accounts, transactions } from "@/db/schema";
+import { calculatePercentageChange } from "@/lib/utils";
 
 const app = new Hono().get(
   "/",
@@ -29,14 +33,74 @@ const app = new Hono().get(
     const startDate = from
       ? parse(from, "yyyy-MM-dd", new Date())
       : defaultFrom;
-    const endDate = to
-      ? parse(to, "yyyy-MM-dd", new Date())
-      : defaultTo;
+    const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
     const periodLength = differenceInDays(endDate, startDate) + 1;
     const lastPeriodStart = subDays(startDate, periodLength);
     const lastPeriodEnd = subDays(endDate, periodLength);
 
+    async function fethcFinancialData(
+      userId: string,
+      startDate: Date,
+      endDate: Date
+    ) {
+      return await db
+        .select({
+          credit:
+            sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+              Number
+            ),
+          debit:
+            sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+              Number
+            ),
+          remaining: sum(transactions.amount).mapWith(Number),
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(
+          and(
+            accountId ? eq(transactions.accountId, accountId) : undefined,
+            eq(accounts.userId, userId),
+            gte(transactions.date, startDate),
+            lte(transactions.date, endDate)
+          )
+        );
+    }
+
+    const [currentPeriod] = await fethcFinancialData(
+      auth.userId,
+      startDate,
+      endDate
+    );
+    const [lastPeriod] = await fethcFinancialData(
+      auth.userId,
+      startDate,
+      endDate
+    );
+
+    const creditChange = calculatePercentageChange(
+      currentPeriod.credit,
+      lastPeriod.credit
+    );
+    const debitChange = calculatePercentageChange(
+      currentPeriod.debit,
+      lastPeriod.debit
+    );
+    const remainingChange = calculatePercentageChange(
+      currentPeriod.remaining,
+      lastPeriod.remaining
+    );
+
+    
+
+    return c.json({
+      currentPeriod,
+      lastPeriod,
+      creditChange,
+      debitChange,
+      remainingChange,
+    });
   }
 );
 
