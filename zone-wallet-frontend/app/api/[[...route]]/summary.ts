@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/db/drizzle";
 import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { accounts, transactions } from "@/db/schema";
-import { calculatePercentageChange } from "@/lib/utils";
+import { calculatePercentageChange, fillMissingDays } from "@/lib/utils";
 
 const app = new Hono().get(
   "/",
@@ -75,8 +75,8 @@ const app = new Hono().get(
     );
     const [lastPeriod] = await fethcFinancialData(
       auth.userId,
-      startDate,
-      endDate
+      lastPeriodStart,
+      lastPeriodEnd
     );
 
     const creditChange = calculatePercentageChange(
@@ -92,14 +92,43 @@ const app = new Hono().get(
       lastPeriod.remaining
     );
 
-    
+    const activeDays = await db
+      .select({
+        date: transactions.date,
+        credit:
+          sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+            Number
+          ),
+        debit:
+          sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
+            Number
+          ),
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+      .where(
+        and(
+          accountId ? eq(transactions.accountId, accountId) : undefined,
+          eq(accounts.userId, auth.userId),
+          gte(transactions.date, startDate),
+          lte(transactions.date, endDate)
+        )
+      )
+      .groupBy(transactions.date)
+      .orderBy(transactions.date);
+
+    const days = fillMissingDays(activeDays, startDate, endDate);
 
     return c.json({
-      currentPeriod,
-      lastPeriod,
-      creditChange,
-      debitChange,
-      remainingChange,
+      data: {
+        remainingAmount: currentPeriod.remaining,
+        remainingChange,
+        creditAmount: currentPeriod.credit,
+        creditChange,
+        debitAmount: currentPeriod.debit,
+        debitChange,
+        days,
+      },
     });
   }
 );
