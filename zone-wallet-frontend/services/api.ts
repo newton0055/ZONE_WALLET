@@ -52,7 +52,7 @@ api.interceptors.response.use(
     });
     if (error.response?.status === 401) {
       Cookies.remove('token', { path: '/' });
-      window.location.href = '/login';
+      window.location.href = '/sign-in';
     }
     return Promise.reject(error);
   }
@@ -100,7 +100,7 @@ const authService = {
       // Always remove the token from cookies, even if the API call fails
       Cookies.remove('token', { path: '/' }); // Important: remove from root path
       // Redirect to login page
-      window.location.href = '/login';
+      window.location.href = '/sign-in';
     }
   },
   

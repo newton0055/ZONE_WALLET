@@ -15,10 +15,8 @@ import Cookies from "js-cookie";
 interface User {
   id: string;
   email: string;
-  profile: {
-    firstName: string;
-    lastName: string;
-  };
+  firstName: string;
+  lastName: string;
 }
 
 interface AuthContextType {
@@ -145,4 +143,9 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+}
+
+export function useUser() {
+  const { user, loading } = useAuth();
+  return { user, isLoaded: !loading };
 }

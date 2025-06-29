@@ -1,23 +1,31 @@
-import { NextResponse } from "next/server";
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const isProtectedRoute = createRouteMatcher([
-  "/"
-]);
+export function middleware(request: NextRequest) {
+  // Check for token in cookies
+  const token = request.cookies.get('token')?.value;
+  const isAuthPage = request.nextUrl.pathname.startsWith('/sign-in') || 
+                    request.nextUrl.pathname.startsWith('/sign-up');
+  const isDashboardPage = request.nextUrl.pathname.startsWith('/dashboard');
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) { 
-    await auth.protect();
+  // If trying to access auth pages while logged in, redirect to dashboard
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If trying to access protected pages while not logged in, redirect to login
+  if (isDashboardPage && !token) {
+    return NextResponse.redirect(new URL('/sign-in', request.url));
+  }
+
+  return NextResponse.next();
 }
 
-return NextResponse.next();
-});
-
+// Only run middleware on specific paths
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
-  ],
-};
+    '/dashboard/:path*',
+    '/sign-in',
+    '/sign-up'
+  ]
+}; 
