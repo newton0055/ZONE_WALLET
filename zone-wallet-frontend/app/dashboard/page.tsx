@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/use-wallet";
 import RecentTransactions from "@/components/dashboard/recent-transactions";
 import { toast } from 'react-hot-toast';
+import BalanceCard from "@/components/dashboard/balance-card";
 
 export default function DashboardPage() {
     const { loading, error } = useWallet();
@@ -27,7 +28,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-0">
+            <div className="mb-8">
+                <BalanceCard />
+            </div>
             <RecentTransactions />
         </div>
     );
